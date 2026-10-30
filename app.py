@@ -6,7 +6,6 @@ class TokenNotFoundError(Exception):
 class InvalidInputError(Exception):
     pass
 
-
 class TokenValidator:
     def __init__(self, token_name):
         self.token_name = token_name
@@ -15,36 +14,38 @@ class TokenValidator:
 
     def load_model(self):
         self.is_loaded = True
-        print(f' {self.token_name} is Loaded')
+        print(f'🔑 {self.token_name} is Loaded into the validator memory.')
 
     def verify_token(self, token):
-        if self.token_name not in self.available_token:
+        # FIX 1: Use the 'token' variable passed into the method
+        if token not in self.available_token:
             raise InvalidTokenError('Access Denied: Invalid Security Token')
-        return f"Acess Granted"
+        return "Access Granted"
 
+# Creating the engine with a bad token to test our safety nets
 engine = TokenValidator('guest_user')
 engine.load_model()
 
-
 try:
-    print(' Starting Token Generation...')
-    output = engine.verify_token(engine)
+    print('\n🛡️ Starting Token Verification Pipeline...')
+    # FIX 2: Pass the actual string property (engine.token_name) instead of the whole object
+    output = engine.verify_token(engine.token_name)
     print(output)
 
 except InvalidTokenError as error:
-    print(f' Alert: System security team notified! Error details: {error}')
+    print(f'🚨 Alert: System security team notified! Error details: {error}')
 
 except TokenNotFoundError as error:
-    print(f"Updating Token Registry..:{error}")
+    print(f"📋 Updating Token Registry...: {error}")
 
 except InvalidInputError as error:
-    print(f'Wrong Input...: {error}')
+    print(f'❌ Wrong Input...: {error}')
 
 except Exception as general_error:
-    print(f'Caught an unexpected error:{general_error}')
+    print(f'❓ Caught an unexpected error: {general_error}')
 
 else:
-    print(" Token granted access successfully with zero issues")
+    print("✨ Token granted access successfully with zero issues.")
 
 finally:
-    print('[CRITICAL] Code Executed.')
+    print('🧹 [CRITICAL] Code Executed. Verification thread closed.')
