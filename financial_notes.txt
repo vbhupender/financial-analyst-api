@@ -1,0 +1,3 @@
+Ticker: TSLA
+Phase: Raw Text Extracted Successfully.
+Update: Ready to feed into Llama-3 model.

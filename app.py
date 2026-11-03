@@ -1,51 +1,59 @@
 
-class InvalidTokenError(Exception):
-    pass
-class TokenNotFoundError(Exception):
-    pass
-class InvalidInputError(Exception):
-    pass
+import os
+from datetime import datetime, timezone
 
-class TokenValidator:
-    def __init__(self, token_name):
-        self.token_name = token_name
-        self.available_token = ['AI_ENGINEER_2026']
-        self.is_loaded = False
+class FinancialDataManager:
+    def __init__(self, output_directory = "financial_workspace1"):
+        self.base_dir = output_directory
+        self.ledger_file = os.path.join(self.base_dir, "pipeline_status.log")
+        os.makedirs(self.base_dir, exist_ok=True)
 
-    def load_model(self):
-        self.is_loaded = True
-        print(f'🔑 {self.token_name} is Loaded into the validator memory.')
+    def append_log(self, ticker:str, status_message:str):
+        timestamp = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M:%S UTC")
+        log_line = f"[{timestamp}] Ticker: {ticker} | {status_message}\n"
 
-    def verify_token(self, token):
-        # FIX 1: Use the 'token' variable passed into the method
-        if token not in self.available_token:
-            raise InvalidTokenError('Access Denied: Invalid Security Token')
-        return "Access Granted"
+        try:
+            with open(self.ledger_file , mode = 'a', encoding = "utf-8") as file:
+                file.write(log_line)
 
-# Creating the engine with a bad token to test our safety nets
-engine = TokenValidator('guest_user')
-engine.load_model()
+        except OSError as e:
+            print(f'[CRITICAL ERROR] Failed to Write to ledger log file:{e}')
 
-try:
-    print('\n🛡️ Starting Token Verification Pipeline...')
-    # FIX 2: Pass the actual string property (engine.token_name) instead of the whole object
-    output = engine.verify_token(engine.token_name)
-    print(output)
+    def stage_extracted_text(self, ticker:str, raw_text:str) -> bool:
+        filename = f"{ticker}_extracted.txt".upper()
+        target_path = os.path.join(self.base_dir, filename)
+        self.append_log(ticker,"Attempting to stage file writing operation")
 
-except InvalidTokenError as error:
-    print(f'🚨 Alert: System security team notified! Error details: {error}')
+        try:
+            with open(target_path, mode = 'w', encoding="utf-8") as file:
+                file.write(raw_text)
+            self.append_log(ticker, f"successfully staged text at:{filename}")
+            print(f"\n success , staged artifact saved to {target_path}")
+            return True
+        
+        except PermissionError:
+            error_msg = f"[CRITICAL] PERMISSION DENIED WRITING TO FILE {filename}"
+            print(error_msg)
+            self.append_log(ticker,error_msg)
+            return False
 
-except TokenNotFoundError as error:
-    print(f"📋 Updating Token Registry...: {error}")
+        except OSError as e:
+            error_msg = f"[CRITICAL] DISK I/O ERROR OCCUREDE {filename}"
+            print(error_msg)
+            self.append_log(ticker,error_msg)
+            return False
 
-except InvalidInputError as error:
-    print(f'❌ Wrong Input...: {error}')
+if __name__ == "__main__":
+    manager = FinancialDataManager()
 
-except Exception as general_error:
-    print(f'❓ Caught an unexpected error: {general_error}')
+    success = manager.stage_extracted_text(
+        ticker = "AB Corporation",
+        raw_text="AB Corp **** Annual NetProfit: 50000Cr"
+    )
+    print(f"\n Program Status  {success}")
 
-else:
-    print("✨ Token granted access successfully with zero issues.")
+        
 
-finally:
-    print('🧹 [CRITICAL] Code Executed. Verification thread closed.')
+
+
+    
