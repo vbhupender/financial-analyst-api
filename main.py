@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-import yfinance as yf
+import yfinance as ticker_stream
 
 app = FastAPI()
 
